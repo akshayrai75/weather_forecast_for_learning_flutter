@@ -13,6 +13,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  String _inputValue = '';
+
   Map data = {};
 
   @override
@@ -25,17 +27,15 @@ class _HomePageState extends State<HomePage> {
     String temperatureUnit = isImperial ? "°F" : "°C";
     String speedUnit = isImperial ? "miles/hr" : "m/s";
 
-    List<Color> bgColor = isDayTime(
-        currentWeatherData.dt,
-        currentWeatherData.sunrise,
-        currentWeatherData.sunset
-    ) ? [Colors.blue[100]!, Colors.blue.shade500] : [Colors.indigo[600]!, Colors.deepPurple[800]!];
+    List<Color> bgColor = isDayTime(currentWeatherData.dt,
+            currentWeatherData.sunrise, currentWeatherData.sunset)
+        ? [Colors.blue[100]!, Colors.blue.shade500]
+        : [Colors.indigo[600]!, Colors.deepPurple[800]!];
 
-    Color? innerBgColor = isDayTime(
-        currentWeatherData.dt,
-        currentWeatherData.sunrise,
-        currentWeatherData.sunset
-    ) ? Colors.blueAccent : Colors.deepPurple[900];
+    Color? innerBgColor = isDayTime(currentWeatherData.dt,
+            currentWeatherData.sunrise, currentWeatherData.sunset)
+        ? Colors.blueAccent
+        : Colors.deepPurple[900];
 
     List<WeatherData> weatherForecast = data['hourlyData'];
 
@@ -57,26 +57,55 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: IntrinsicWidth(
+                          child: TextField(
+                            onChanged: (text) {
+                              setState(() {
+                                _inputValue = text;
+                              });
+                            },
+                            style: TextStyle(
+                              color: Colors.black54
+                            ),
+                            decoration: InputDecoration(
+                                hintText: currentWeatherData.cityName,
+                                hintStyle: TextStyle(
+                                  color: Colors.black54
+                                ),
+                                filled: true,
+                                fillColor: Colors.white,
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(100))),
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(CupertinoIcons.search_circle, size: 60),
+                        onPressed: () async {
+                          Navigator.pushReplacementNamed(context, '/home',
+                              arguments: await Utils.getCurrentWeatherDataArgs(
+                                  location: _inputValue));
+                          // dynamic result = await setupCurrentWeatherData(_inputValue);
+                        },
+                      )
+                    ],
+                  ),
+                  Row(
                     children: [
                       Text(
-                        currentWeatherData.cityName,
+                        'Last Updated on: ',
+                        style: TextStyle(
+                          fontSize: 15.0,
+                        ),
+                      ),
+                      Text(
+                        currentWeatherData.dt,
                         style: TextStyle(
                           fontSize: 20.0,
                         ),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            currentWeatherData.dt,
-                            style: TextStyle(
-                              fontSize: 20.0,
-                            ),
-                          ),
-                          Text('Last Updated on', style: TextStyle(fontSize: 12),)
-                        ],
-                      ),
+                      )
                     ],
                   ),
                   Row(
@@ -131,8 +160,7 @@ class _HomePageState extends State<HomePage> {
                               getIcon("visibility", 24.0),
                               'Visibility',
                               '${currentWeatherData.visibility / 1000} Km',
-                              innerBgColor
-                          ),
+                              innerBgColor),
                         ),
                       ),
                       Expanded(
@@ -141,8 +169,7 @@ class _HomePageState extends State<HomePage> {
                               getIcon("humidity", 24.0),
                               'Humidity',
                               '${currentWeatherData.main.humidity}%',
-                              innerBgColor
-                          ),
+                              innerBgColor),
                         ),
                       ),
                     ],
@@ -156,8 +183,7 @@ class _HomePageState extends State<HomePage> {
                               getIcon("wind", 24.0),
                               'Wind Speed',
                               '${currentWeatherData.wind.speed} $speedUnit',
-                              innerBgColor
-                          ),
+                              innerBgColor),
                         ),
                       ),
                       Expanded(
@@ -166,8 +192,7 @@ class _HomePageState extends State<HomePage> {
                               getIcon("direction", 24.0),
                               'Wind Direction',
                               '${currentWeatherData.wind.deg}°',
-                              innerBgColor
-                          ),
+                              innerBgColor),
                         ),
                       ),
                     ],
@@ -175,7 +200,6 @@ class _HomePageState extends State<HomePage> {
                   Container(
                     padding: EdgeInsets.all(10.0),
                     margin: EdgeInsets.all(5.0),
-
                     decoration: BoxDecoration(
                       color: innerBgColor,
                       borderRadius: BorderRadius.circular(10.0),
@@ -229,7 +253,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildDataContainer(Icon icon, String dataLabel, String data, Color? bgColor) {
+  Widget _buildDataContainer(
+      Icon icon, String dataLabel, String data, Color? bgColor) {
     return Container(
       padding: EdgeInsets.all(10.0),
       margin: EdgeInsets.all(5.0),
@@ -264,7 +289,8 @@ class _HomePageState extends State<HomePage> {
     DateTime setHrMin = DateFormat('HH:mm').parse(sunset);
 
     return currHrMin.hour >= riseHrMin.hour && currHrMin.hour < setHrMin.hour
-        ? true : false;
+        ? true
+        : false;
   }
 
   Icon getIcon(String iconName, double iconSize) {
@@ -302,7 +328,8 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Widget _buildWeatherForecastRow(List<WeatherData> weatherForecast, Color? bgColor) {
+  Widget _buildWeatherForecastRow(
+      List<WeatherData> weatherForecast, Color? bgColor) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -321,7 +348,8 @@ class _HomePageState extends State<HomePage> {
               itemCount: weatherForecast.length,
               itemBuilder: (context, index) {
                 final weatherData = weatherForecast[index];
-                final formattedDateTime = DateFormat('dd MMM').format(weatherData.dateTime);
+                final formattedDateTime =
+                    DateFormat('dd MMM').format(weatherData.dateTime);
 
                 return Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -331,7 +359,7 @@ class _HomePageState extends State<HomePage> {
                       Text('${weatherData.pop.toString()}%'),
                       weatherData.iconImage,
                       Text(
-                          '${weatherData.main.temp}°',
+                        '${weatherData.main.temp}°',
                         style: TextStyle(fontSize: 25),
                       ),
                       Text(formattedDateTime),
@@ -346,15 +374,17 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildWeatherForecastCol(List<WeatherData> weatherForecast, Color? bgColor) {
-    List<DailyWeather> dailyWeatherList = Utils.getDailyForecast(weatherForecast);
+  Widget _buildWeatherForecastCol(
+      List<WeatherData> weatherForecast, Color? bgColor) {
+    List<DailyWeather> dailyWeatherList =
+        Utils.getDailyForecast(weatherForecast);
     dailyWeatherList.sort((a, b) => a.dateTime.compareTo(b.dateTime));
 
     return Column(
       children: dailyWeatherList.map((weatherData) {
         return Container(
           padding: EdgeInsets.all(10.0),
-          margin: EdgeInsets.fromLTRB(5,5,5,0),
+          margin: EdgeInsets.fromLTRB(5, 5, 5, 0),
           decoration: BoxDecoration(
             color: bgColor ?? Colors.blue[800],
             borderRadius: BorderRadius.circular(10.0),
@@ -364,10 +394,7 @@ class _HomePageState extends State<HomePage> {
             children: [
               Text(weatherData.day),
               Row(
-                children: [
-                  Text('${weatherData.pop}%'),
-                  weatherData.iconImage
-                ],
+                children: [Text('${weatherData.pop}%'), weatherData.iconImage],
               ),
               Text('${weatherData.minTemp}°/${weatherData.maxTemp}°')
             ],

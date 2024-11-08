@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:weather_forecast_for_learning_flutter/pages/home_page.dart';
 import 'package:weather_forecast_for_learning_flutter/pages/loading_page.dart';
-import 'package:weather_forecast_for_learning_flutter/pages/search_location_page.dart';
+import 'package:weather_forecast_for_learning_flutter/pages/error_page.dart';
 
 ThemeData customTheme = ThemeData(
   brightness: Brightness.dark, // Set brightness to dark
@@ -21,6 +21,6 @@ void main() => runApp(MaterialApp(
   routes: {
     '/': (context) => LoadingPage(),
     '/home': (context) => HomePage(),
-    '/location': (context) => SearchLocationPage()
+    '/error': (context) => ErrorPage()
   },
 ));

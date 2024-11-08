@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:weather_forecast_for_learning_flutter/module/weather_data.dart';
-import 'package:weather_forecast_for_learning_flutter/service/current_weather_data.dart';
-import 'package:weather_forecast_for_learning_flutter/service/current_weather_obj.dart';
-import 'package:weather_forecast_for_learning_flutter/service/future_weather_data.dart';
-import 'package:weather_forecast_for_learning_flutter/service/future_weather_obj.dart';
+import 'package:geolocator/geolocator.dart';
+
+import '../service/utils.dart';
 
 class LoadingPage extends StatefulWidget {
   const LoadingPage({super.key});
@@ -14,30 +12,52 @@ class LoadingPage extends StatefulWidget {
 }
 
 class _LoadingPageState extends State<LoadingPage> {
+  Future<Position> _determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Location services are disabled.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('Location permissions are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      // Permissions are denied forever, handle appropriately.
+      return Future.error(
+          'Location permissions are permanently denied, we cannot request permissions.');
+    }
+
+    return await Geolocator.getCurrentPosition();
+  }
 
   void setupCurrentWeatherData() async {
-    CurrentWeatherAPI currentWeatherAPI = CurrentWeatherAPI(
-        location: "Bangalore"
-    );
-    ForecastData forecastData = ForecastData(
-      location: "Bangalore"
-    );
-    await currentWeatherAPI.getWeatherData();
-    await forecastData.getHourlyForecastData();
-
-    WeatherData currentWeatherData = CurrentWeatherObj.getWeatherDataObj(currentWeatherAPI.data);
-    List<WeatherData> weatherDataList = FutureWeatherObj.getWeatherDataObj(forecastData.hourlyForecastData);
-
-    weatherDataList.sort((a, b) => a.dateTime.compareTo(b.dateTime));
-
-    Navigator.pushReplacementNamed(context, '/home', arguments: {
-      "currentData": currentWeatherData,
-      // "hourlyData": {},
-      "hourlyData": weatherDataList,
-      // "dailyData": forecastData.dailyForecastData
-      "units":"metric",
-      // "iconImage": iconImage
-    });
+    Position position;
+    try {
+      position = await _determinePosition();
+      Navigator.pushReplacementNamed(context, '/home',
+          arguments: await Utils.getCurrentWeatherDataArgs(
+              location: "Bangalore",
+              latitude: position.latitude.toString(),
+              longitude: position.longitude.toString()));
+    } catch (e) {
+      try {
+        Navigator.pushReplacementNamed(context, '/home',
+            arguments:
+                await Utils.getCurrentWeatherDataArgs(location: "Bangalore"));
+      } catch (e2) {
+        Navigator.pushNamed(context, '/error',
+            arguments: {'error' : e2.toString()}
+        );
+      }
+    }
   }
 
   @override
@@ -48,7 +68,8 @@ class _LoadingPageState extends State<LoadingPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(child: Center(
+    return SafeArea(
+        child: Center(
       child: SpinKitSpinningLines(
         color: Colors.white,
         size: 50,
